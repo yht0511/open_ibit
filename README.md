@@ -20,3 +20,5 @@ docker run -d -p 8000:8000 --name OpeniBIT \
     yht0511/open_ibit:latest
 ```
 
+现在,你已经获得了一个免费的ds接口!你现在可以使用openai等库对接该接口,或是简单地使用nextchat: 在设置里填入接口地址和api_key(没有设置则随便输入)即可享用!
+
