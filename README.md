@@ -9,13 +9,14 @@
 ```bash
 # 不需要验证的情况
 docker run -d -p 8000:8000 --name OpeniBIT \
-    -e BIT_USERNAME = 统一身份验证用户名 \
-    -e BIT_PASSWORD = 统一身份验证密码 \
+    -e BIT_USERNAME=统一身份验证用户名 \
+    -e BIT_PASSWORD=统一身份验证密码 \
     yht0511/open_ibit:latest
 # 需要设置api_key
 docker run -d -p 8000:8000 --name OpeniBIT \
-    -e BIT_USERNAME = 统一身份验证用户名 \
-    -e BIT_PASSWORD = 统一身份验证密码 \
-    -e API_KEY = 你想设置的api_key \
+    -e BIT_USERNAME=统一身份验证用户名 \
+    -e BIT_PASSWORD=统一身份验证密码 \
+    -e API_KEY=你想设置的api_key \
     yht0511/open_ibit:latest
 ```
+
