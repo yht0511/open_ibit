@@ -23,6 +23,12 @@ def verify_api_key(Authorization: str = Header(...)):
         return True
     raise HTTPException(status_code=403, detail="Unauthorized")
 
+if settings.api_key:
+    # 依赖
+    dependencies = [Depends(verify_api_key)]
+else:
+    dependencies = None
+
 # 定义 ModelCard 数据模型
 class ModelCard(BaseModel):
     id: str
@@ -76,7 +82,7 @@ class ChatCompletionResponse(BaseModel):
     choices: List[Union[ChatCompletionResponseChoice, ChatCompletionResponseStreamChoice]]
     created: Optional[int] = Field(default_factory=lambda: int(time.time()))
 
-@app.get("/v1/models", response_model=ModelList, dependencies=[Depends(verify_api_key)])
+@app.get("/v1/models", response_model=ModelList, dependencies=dependencies)
 async def list_models():
     model_card = ModelCard(id="deepseek-r1")
     return ModelList(data=[model_card])
@@ -105,7 +111,7 @@ async def create_chat_completion(request: ChatCompletionRequest, response: Respo
         generate = predict(query, history, request.model)
         return EventSourceResponse(generate, media_type="text/event-stream")
     
-    response= ibit.chat(query, history=history,stream=False)
+    response = ibit.chat(query, history=history)
     choice_data = ChatCompletionResponseChoice(
         index=0,
         message=ChatMessage(role="assistant", content=response),
@@ -116,7 +122,7 @@ async def create_chat_completion(request: ChatCompletionRequest, response: Respo
 
 def predict(query: str, history: List[List[str]], model_id: str):
     global ibit
-    response = ibit.chat(query, stream=True, history=history)  # 获取流式输出
+    response = ibit.chat_stream(query, history=history)  # 获取流式输出
     
     for chunk in response:
         choice_data = ChatCompletionResponseStreamChoice(

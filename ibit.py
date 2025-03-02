@@ -51,7 +51,7 @@ class iBit:
             self.delete_dialogue(temp_dialogue_id)
             time.sleep(60)
     
-    def chat(self, query, stream=True, history=[], temperature=0.7, top_k=3, score_threshold=0.5, prompt_name="", knowledge_base_name=""):
+    def chat(self, query, history=[], temperature=0.7, top_k=3, score_threshold=0.5, prompt_name="", knowledge_base_name=""):
         print(f"User: {query}")
         url = self.url + "/proxy/v1/chat/stream/private/kb"
         temp_dialogue_id = self.new_dialogue()
@@ -59,7 +59,7 @@ class iBit:
         data = {
             "query": query,
             "dialogue_id": temp_dialogue_id,
-            "stream": stream,
+            "stream": False,
             "history": history,
             "temperature": temperature,
             "top_k": top_k,
@@ -69,21 +69,45 @@ class iBit:
         }
         response = requests.post(url, headers=self.headers, json=data, stream=True)
         response.raw.decode_content = True
+        print("Assistant:",end="",flush=True)
         res = ""
+        for chunk in response.iter_content(chunk_size=1024):
+            if chunk:
+                try:
+                    answer = json.loads(chunk.decode("utf-8").split("data: ")[1].replace("\n",""))["answer"]
+                    print(answer,end="",flush=True)
+                    res += answer
+                except: pass
+        self.delete_dialogue(temp_dialogue_id)
+        return res
+    
+    def chat_stream(self, query, history=[], temperature=0.7, top_k=3, score_threshold=0.5, prompt_name="", knowledge_base_name=""):
+        print(f"User: {query}")
+        url = self.url + "/proxy/v1/chat/stream/private/kb"
+        temp_dialogue_id = self.new_dialogue()
+        query = self.get_history_prompt(history) + query
+        data = {
+            "query": query,
+            "dialogue_id": temp_dialogue_id,
+            "stream": True,
+            "history": history,
+            "temperature": temperature,
+            "top_k": top_k,
+            "score_threshold": score_threshold,
+            "prompt_name": prompt_name,
+            "knowledge_base_name": knowledge_base_name
+        }
+        response = requests.post(url, headers=self.headers, json=data, stream=True)
+        response.raw.decode_content = True
         print("Assistant:",end="",flush=True)
         for chunk in response.iter_content(chunk_size=1024):
             if chunk:
                 try:
                     answer = json.loads(chunk.decode("utf-8").split("data: ")[1].replace("\n",""))["answer"]
                     print(answer,end="",flush=True)
-                    if stream:
-                        yield answer
-                    res += answer
+                    yield answer
                 except: pass
         self.delete_dialogue(temp_dialogue_id)
-        if not stream:
-            return res
-
 
     def get_history_prompt(self, history):
         res = "[历史对话](请注意这是由程序提供的历史对话功能,不要把它当成用户对话的一部分,不要刻意提及它):"
@@ -91,7 +115,6 @@ class iBit:
             res += f"\n{i['role']}:{i['content']}"
         res += "\n接下来是用户的新一轮问题:\n"
         return res
-        
         
     def new_dialogue(self):
         url= self.url + "/proxy/v1/dialogue"
