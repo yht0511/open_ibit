@@ -95,7 +95,7 @@ async def create_chat_completion(request: ChatCompletionRequest, response: Respo
    
     prev_messages = request.messages[:-1]
     if len(prev_messages) > 0 and prev_messages[0].role == "system":
-        query = prev_messages.pop(0).content + query
+        query = f"[系统提示]:\n{prev_messages.pop(0).content}\n\n[用户问题]:\n{query}"
     
     history = []
     if len(prev_messages) % 2 == 0:
