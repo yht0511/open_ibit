@@ -4,19 +4,13 @@ import ddddocr
 from bs4 import BeautifulSoup
 from auth.aes_util import encrypt_password
 
-# 配置日志
-headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-}
 BASE_URL = "https://login.bit.edu.cn"
 LOGIN_URL = f"{BASE_URL}/authserver/login"
-
 
 class LoginService:
     def __init__(self, service_url):
         self.service_url = service_url
         self.session = requests.Session()
-        self.session.headers = headers
         self.error_pattern = re.compile(r'<span id="showErrorTip"><span>(.*?)</span>')
         self.ocr = ddddocr.DdddOcr(show_ad=False)
     def _get_html_error(self, html):
@@ -58,11 +52,8 @@ class LoginService:
 
     def _get_captcha(self):
         try:
-            # 添加Referer头
-            headers = {"Referer": LOGIN_URL}
             response = self.session.get(
                 f"{BASE_URL}/authserver/getCaptcha.htl",
-                headers=headers
             )
             if not response.ok:
                 raise RuntimeError(f"获取验证码失败: {response.status_code}")
