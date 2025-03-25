@@ -8,18 +8,17 @@ from auth.aes_util import encrypt_password
 headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
 }
-IBIT_CALLBACK_SERVICE = "https://ibit.yanhekt.cn/proxy/v1/cas/callback"
 BASE_URL = "https://login.bit.edu.cn"
 LOGIN_URL = f"{BASE_URL}/authserver/login"
 
 
 class LoginService:
-    def __init__(self):
+    def __init__(self, service_url):
+        self.service_url = service_url
         self.session = requests.Session()
         self.session.headers = headers
         self.error_pattern = re.compile(r'<span id="showErrorTip"><span>(.*?)</span>')
         self.ocr = ddddocr.DdddOcr(show_ad=False)
-
     def _get_html_error(self, html):
         match = self.error_pattern.search(html)
         return match.group(1) if match else ""
@@ -28,7 +27,7 @@ class LoginService:
         try:
             response = self.session.get(
                 LOGIN_URL,
-                params={"service": IBIT_CALLBACK_SERVICE}
+                params={"service": self.service_url}
             )
             if not response.ok:
                 raise RuntimeError(f"获取登录页面失败: {response.status_code}")
@@ -48,7 +47,8 @@ class LoginService:
 
     def check_need_captcha(self, username):
         response = self.session.get(
-            f"{BASE_URL}/authserver/checkNeedCaptcha.htl?username={username}"
+            f"{BASE_URL}/authserver/checkNeedCaptcha.htl",
+            params={"username": username}
         )
         if response.text == '{"isNeed":true}':
             print(f"[INFO] 需要验证码: {username}")
@@ -61,7 +61,8 @@ class LoginService:
             # 添加Referer头
             headers = {"Referer": LOGIN_URL}
             response = self.session.get(
-                f"{BASE_URL}/authserver/getCaptcha.htl", headers=headers
+                f"{BASE_URL}/authserver/getCaptcha.htl",
+                headers=headers
             )
             if not response.ok:
                 raise RuntimeError(f"获取验证码失败: {response.status_code}")
@@ -95,7 +96,7 @@ class LoginService:
                 "dllt": "generalLogin",
                 "lt": "",
                 "rememberMe": "true",
-                "service": IBIT_CALLBACK_SERVICE,
+                "service": self.service_url,
             }
 
             response = self.session.post(LOGIN_URL, data=data)
