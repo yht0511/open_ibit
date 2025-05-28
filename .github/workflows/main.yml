@@ -2,9 +2,9 @@ name: Main
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main","selenium"]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main","selenium" ]
 
 jobs:
   docker-build:
