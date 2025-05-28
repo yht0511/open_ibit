@@ -48,11 +48,13 @@ class ModelList(BaseModel):
 class ChatMessage(BaseModel):
     role: Literal["user", "assistant", "system"]
     content: str
+    reasoning_content: str = None
 
 # 定义DeltaMessage 数据模型
 class DeltaMessage(BaseModel):
     role: Optional[Literal["user", "assistant", "system"]] = None
     content: Optional[str] = None
+    reasoning_content: Optional[str] = None
 
 # 定义ChatCompletionRequest 数据模型
 class ChatCompletionRequest(BaseModel):
@@ -111,10 +113,10 @@ async def create_chat_completion(request: ChatCompletionRequest, response: Respo
         generate = predict(query, history, request.model)
         return EventSourceResponse(generate, media_type="text/event-stream")
     
-    response = ibit.chat(query, history=history)
+    reasoning_content, content = ibit.chat(query, history=history)
     choice_data = ChatCompletionResponseChoice(
         index=0,
-        message=ChatMessage(role="assistant", content=response),
+        message=ChatMessage(role="assistant", content=content, reasoning_content=reasoning_content),
         finish_reason="stop"
     )
 
@@ -127,7 +129,7 @@ def predict(query: str, history: List[List[str]], model_id: str):
     for chunk in response:
         choice_data = ChatCompletionResponseStreamChoice(
             index=0,
-            delta=DeltaMessage(content=chunk),
+            delta=DeltaMessage(content=chunk["content"], reasoning_content=chunk["reasoning_content"]),
             finish_reason=None
         )
         chunk = ChatCompletionResponse(model=model_id, choices=[choice_data], object="chat.completion.chunk")

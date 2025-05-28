@@ -78,7 +78,12 @@ class iBit:
                     res += answer
                 except: pass
         self.delete_dialogue(temp_dialogue_id)
-        return res
+        reasoning_content = res.split("</think>")[0].replace("<think>","").strip()
+        if "</think>" in res:
+            content = res.split("</think>")[1].strip()
+        else:
+            content = res.strip()
+        return reasoning_content, content
     
     def chat_stream(self, query, history=[], temperature=0.7, top_k=3, score_threshold=0.5, prompt_name="", knowledge_base_name=""):
         print(f"User: {query}")
@@ -99,12 +104,24 @@ class iBit:
         response = requests.post(url, headers=self.headers, json=data, stream=True)
         response.raw.decode_content = True
         print("Assistant:",end="",flush=True)
+        res = ""
         for chunk in response.iter_content(chunk_size=1024):
             if chunk:
                 try:
                     answer = json.loads(chunk.decode("utf-8").split("data: ")[1].replace("\n",""))["answer"]
+                    res += answer
+                    if answer not in ["<think>","</think>"]:
+                        if "<think>" in res and "</think>" not in res:
+                            yield {
+                                "content": None,
+                                "reasoning_content": answer
+                            }
+                        else:
+                            yield {
+                                "content": answer,
+                                "reasoning_content": None
+                            }
                     print(answer,end="",flush=True)
-                    yield answer
                 except: pass
         self.delete_dialogue(temp_dialogue_id)
 
