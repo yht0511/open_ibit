@@ -4,7 +4,7 @@ import os
 username = ""
 password = ""
 api_key = ""
-
+models = ["deepseek-r1"]
 
 if os.environ.get('BIT_USERNAME'):
     username = os.environ.get('BIT_USERNAME')

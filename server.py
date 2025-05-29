@@ -44,10 +44,16 @@ class ModelList(BaseModel):
     object: str = "list"
     data: List[ModelCard] = []
 
+# 定义内容项数据模型（支持多模态）
+class ContentItem(BaseModel):
+    type: Literal["text", "image_url"]
+    text: Optional[str] = None
+    image_url: Optional[Dict[str, str]] = None
+    
 # 定义ChatMessage 数据模型
 class ChatMessage(BaseModel):
     role: Literal["user", "assistant", "system"]
-    content: str
+    content: Union[str, List[ContentItem]]
     reasoning_content: str = None
 
 # 定义DeltaMessage 数据模型
@@ -89,23 +95,41 @@ async def list_models():
     model_card = ModelCard(id="deepseek-r1")
     return ModelList(data=[model_card])
 
-@app.post("/v1/chat/completions", response_model=ChatCompletionResponse, dependencies=[Depends(verify_api_key)])
+# 处理content字段，提取文本内容
+def extract_text_content(content: Union[str, List[ContentItem]]) -> str:
+    if isinstance(content, str):
+        return content
+    elif isinstance(content, list):
+        text_parts = []
+        for item in content:
+            if item.type == "text" and item.text:
+                text_parts.append(item.text)
+        return " ".join(text_parts)
+    return ""
+
+@app.post("/v1/chat/completions", response_model=ChatCompletionResponse, dependencies=dependencies)
 async def create_chat_completion(request: ChatCompletionRequest, response: Response):
+    if request.model not in settings.models:
+        raise HTTPException(status_code=400, detail=f"Model {request.model} not supported, suppored models: {settings.models}")
+    
     if request.messages[-1].role != "user":
         raise HTTPException(status_code=400, detail="Invalid request")
-    query = request.messages[-1].content
+    query = extract_text_content(request.messages[-1].content)
    
     prev_messages = request.messages[:-1]
     if len(prev_messages) > 0 and prev_messages[0].role == "system":
-        query = f"[系统提示]:\n{prev_messages.pop(0).content}\n\n[用户问题]:\n{query}"
+        system_content = extract_text_content(prev_messages.pop(0).content)
+        query = f"[系统提示]:\n{system_content}\n\n[用户问题]:\n{query}"
     
     history = []
     if len(prev_messages) % 2 == 0:
-        for i in range(0, len(prev_messages)-1):
+        for i in range(0, len(prev_messages)-1, 2):
             if prev_messages[i].role == "user" and prev_messages[i+1].role == "assistant":
-                history.append({"role": "user", "content": prev_messages[i].content})
-                history.append({"role": "assistant", "content": prev_messages[i+1].content})
-                
+                user_content = extract_text_content(prev_messages[i].content)
+                assistant_content = extract_text_content(prev_messages[i+1].content)
+                history.append({"role": "user", "content": user_content})
+                history.append({"role": "assistant", "content": assistant_content})
+    
     if request.stream:
         response.headers["Cache-Control"] = "no-cache"
         response.headers["Content-Type"] = "text/event-stream"
