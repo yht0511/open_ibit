@@ -6,3 +6,4 @@ sse_starlette==2.2.1
 uvicorn==0.34.0
 beautifulsoup4==4.12.3
 pycryptodome==3.20.0
+bit_login
