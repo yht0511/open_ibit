@@ -19,7 +19,7 @@ class iBit:
     def login(self, username, password):
         self.username = username
         self.password = password
-        self.cookies = auth.login.login(username, password)
+        self.cookies = auth.login.login(username, password)["cookie_json"]
         self.badge = self.cookies["badge_2"]
         self.badge_decoded = urllib.parse.quote(self.badge)
         self.headers = {
