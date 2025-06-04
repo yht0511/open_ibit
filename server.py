@@ -114,7 +114,7 @@ def extract_text_content(content: Union[str, List[ContentItem]]) -> str:
 async def create_chat_completion(request: ChatCompletionRequest, response: Response):
     global Models
     if request.model not in settings.models:
-        raise HTTPException(status_code=400, detail=f"Model {request.model} not supported, suppored models: {settings.models}")
+        raise HTTPException(status_code=400, detail=f"Model {request.model} not supported, suppored models: {settings.models.keys()}")
     
     if request.messages[-1].role != "user":
         raise HTTPException(status_code=400, detail="Invalid request")
