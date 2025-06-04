@@ -111,7 +111,6 @@ class Agent:
             cookies=self.cookies, 
             headers=self.headers
         )
-        print(response.text)
         return True
 
     def get_conversation_list(self):

@@ -92,8 +92,11 @@ class ChatCompletionResponse(BaseModel):
 
 @app.get("/v1/models", response_model=ModelList, dependencies=dependencies)
 async def list_models():
-    model_card = ModelCard(id="deepseek-r1")
-    return ModelList(data=[model_card])
+    global Models
+    cards = []
+    for model in Models:
+        cards.append(ModelCard(id=model, owned_by="Teclab"))
+    return ModelList(data=cards)
 
 # 处理content字段，提取文本内容
 def extract_text_content(content: Union[str, List[ContentItem]]) -> str:
