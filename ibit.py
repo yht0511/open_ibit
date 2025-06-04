@@ -11,11 +11,13 @@ class iBit:
         self.username = username
         self.password = password
         self.url = "https://ibit.yanhekt.cn"
-        self.login(username, password)
+    
+    def init(self):
+        self.login(self.username, self.password)
         self.check_login_thread = threading.Thread(target=self.check_login)
         self.check_login_thread.daemon = True
         self.check_login_thread.start()
-        
+    
     def login(self, username, password):
         self.username = username
         self.password = password
@@ -51,39 +53,14 @@ class iBit:
             time.sleep(60)
     
     def chat(self, query, history=[], temperature=0.7, top_k=3, score_threshold=0.5, prompt_name="", knowledge_base_name=""):
-        print(f"User: {query}")
-        url = self.url + "/proxy/v1/chat/stream/private/kb"
-        temp_dialogue_id = self.new_dialogue()
-        query = self.get_history_prompt(history) + query
-        data = {
-            "query": query,
-            "dialogue_id": temp_dialogue_id,
-            "stream": False,
-            "history": history,
-            "temperature": temperature,
-            "top_k": top_k,
-            "score_threshold": score_threshold,
-            "prompt_name": prompt_name,
-            "knowledge_base_name": knowledge_base_name
-        }
-        response = requests.post(url, headers=self.headers, json=data, stream=True)
-        response.raw.decode_content = True
-        print("Assistant:",end="",flush=True)
-        res = ""
-        for chunk in response.iter_content(chunk_size=1024):
-            if chunk:
-                try:
-                    answer = json.loads(chunk.decode("utf-8").split("data: ")[1].replace("\n",""))["answer"]
-                    print(answer,end="",flush=True)
-                    res += answer
-                except: pass
-        self.delete_dialogue(temp_dialogue_id)
-        reasoning_content = res.split("</think>")[0].replace("<think>","").strip()
-        if "</think>" in res:
-            content = res.split("</think>")[1].strip()
-        else:
-            content = res.strip()
-        return reasoning_content, content
+        result = ""
+        reasoning =  ""
+        for chunk in self.chat_stream(query, history, temperature, top_k, score_threshold, prompt_name, knowledge_base_name):
+            if chunk.get("content"):
+                result += chunk["content"]
+            if chunk.get("reasoning_content"):
+                reasoning += chunk["reasoning_content"]
+        return reasoning, result
     
     def chat_stream(self, query, history=[], temperature=0.7, top_k=3, score_threshold=0.5, prompt_name="", knowledge_base_name=""):
         print(f"User: {query}")

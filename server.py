@@ -109,6 +109,7 @@ def extract_text_content(content: Union[str, List[ContentItem]]) -> str:
 
 @app.post("/v1/chat/completions", response_model=ChatCompletionResponse, dependencies=dependencies)
 async def create_chat_completion(request: ChatCompletionRequest, response: Response):
+    global Models
     if request.model not in settings.models:
         raise HTTPException(status_code=400, detail=f"Model {request.model} not supported, suppored models: {settings.models}")
     
@@ -133,11 +134,10 @@ async def create_chat_completion(request: ChatCompletionRequest, response: Respo
     if request.stream:
         response.headers["Cache-Control"] = "no-cache"
         response.headers["Content-Type"] = "text/event-stream"
-        
         generate = predict(query, history, request.model)
         return EventSourceResponse(generate, media_type="text/event-stream")
     
-    reasoning_content, content = ibit.chat(query, history=history)
+    reasoning_content, content = Models[request.model].chat(query, history=history)
     choice_data = ChatCompletionResponseChoice(
         index=0,
         message=ChatMessage(role="assistant", content=content, reasoning_content=reasoning_content),
@@ -147,8 +147,8 @@ async def create_chat_completion(request: ChatCompletionRequest, response: Respo
     return ChatCompletionResponse(model=request.model, choices=[choice_data], object="chat.completion")
 
 def predict(query: str, history: List[List[str]], model_id: str):
-    global ibit
-    response = ibit.chat_stream(query, history=history)  # 获取流式输出
+    global Models
+    response = Models[model_id].chat_stream(query, history=history)  # 获取流式输出
     
     for chunk in response:
         choice_data = ChatCompletionResponseStreamChoice(
@@ -171,7 +171,10 @@ def predict(query: str, history: List[List[str]], model_id: str):
 
 if __name__ == "__main__":
     t = time.time()
-    print("正在登录账号...")  # 提示信息
-    ibit = iBit(settings.username,settings.password)  # 初始化 iBit 实例
-    print(f"账号登录成功(用时{round(time.time()-t,1)}s),启动 FastAPI 应用程序...")
+    print("正在初始化模型...")  # 提示信息
+    Models = settings.models
+    for model in Models:
+        print(f"载入: {model}")
+        Models[model].init()  # 初始化模型
+    print(f"各模型初始化成功(用时{round(time.time()-t,1)}s),启动 FastAPI 应用程序...")
     uvicorn.run(app,host='0.0.0.0',port=8000,workers=1)  # 启动 FastAPI 应用程序
