@@ -11,9 +11,9 @@ agent_visitor_key = ""
 api_key = ""
 
 if os.environ.get('BIT_USERNAME'):
-    username = os.environ.get('BIT_USERNAME')
+    bit_username = os.environ.get('BIT_USERNAME')
 if os.environ.get('BIT_PASSWORD'):
-    password = os.environ.get('BIT_PASSWORD')
+    bit_password = os.environ.get('BIT_PASSWORD')
 if os.environ.get('AGENT_APP_KEY'):
     agent_app_key = os.environ.get('AGENT_APP_KEY')
 if os.environ.get('AGENT_VISITOR_KEY'):
