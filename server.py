@@ -210,7 +210,7 @@ def calc_price(model,_in,_out):
         out_tokens = model["tokenizer"](_out)
         total_price = (in_tokens / 1000000) * price_in + (out_tokens / 1000000) * price_out
         with open(settings.price_log_file, "a", encoding="utf-8") as f:
-            f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - Model: {model["name"]}, Input Tokens: {in_tokens}, Output Tokens: {out_tokens}, Price: ¥{total_price:.6f}\n")
+            f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} - Model: {model['name']}, Input Tokens: {in_tokens}, Output Tokens: {out_tokens}, Price: ¥{total_price:.6f}\n")
         f = open(settings.price_log_json,"r", encoding="utf-8")
         data = json.load(f)
         f.close()
