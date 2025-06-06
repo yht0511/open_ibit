@@ -43,7 +43,6 @@ class Agent:
         return reasoning, result
     
     def chat_stream(self, query, history=[]):
-        print(f"User: {query}")
         url = "https://agent.bit.edu.cn/api/proxy/chat/v2/chat_query"
         temp_dialogue_id = self.new_dialogue()
         query = self.get_history_prompt(history) + query
@@ -57,7 +56,6 @@ class Agent:
         }
         response = requests.post(url, json=json_data, cookies=self.cookies, headers=self.headers, stream=True)
         response.raw.decode_content = True
-        print("Assistant:",end="",flush=True)
         answer = ""
         self.delete_dialogue(temp_dialogue_id)
         for chunk in response.iter_content(chunk_size=1024):
@@ -76,7 +74,6 @@ class Agent:
                             "content": answer,
                             "reasoning_content": None
                         }
-                    print(answer,end="",flush=True)
                 except: pass
 
     def get_history_prompt(self, history):

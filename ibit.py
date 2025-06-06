@@ -64,7 +64,6 @@ class iBit:
         return reasoning, result
     
     def chat_stream(self, query, history=[], temperature=0.7, top_k=3, score_threshold=0.5, prompt_name="", knowledge_base_name=""):
-        print(f"User: {query}")
         url = self.url + "/proxy/v1/chat/stream/private/kb"
         temp_dialogue_id = self.new_dialogue()
         query = self.get_history_prompt(history) + query
@@ -81,7 +80,6 @@ class iBit:
         }
         response = requests.post(url, headers=self.headers, json=data, stream=True,timeout=self.timeout_seconds)
         response.raw.decode_content = True
-        print("Assistant:",end="",flush=True)
         res = ""
         for chunk in response.iter_content(chunk_size=1024):
             if chunk:
@@ -99,7 +97,6 @@ class iBit:
                                 "content": answer,
                                 "reasoning_content": None
                             }
-                    print(answer,end="",flush=True)
                 except:
                     pass
         self.delete_dialogue(temp_dialogue_id)
