@@ -4,9 +4,9 @@ import uvicorn
 from pydantic import BaseModel, Field
 from fastapi import FastAPI, HTTPException, Response, Depends, Header
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Any, Dict, List, Literal, Optional, Union
-from sse_starlette.sse import ServerSentEvent, EventSourceResponse
-from ibit import iBit
+from typing import Dict, List, Literal, Optional, Union
+from sse_starlette.sse import EventSourceResponse
+import asyncio
 import settings  # 导入 iBit 类
 
 app = FastAPI() # 创建 FastAPI 应用程序
@@ -140,7 +140,7 @@ async def create_chat_completion(request: ChatCompletionRequest, response: Respo
         generate = predict(query, history, request.model)
         return EventSourceResponse(generate, media_type="text/event-stream")
     
-    reasoning_content, content = Models[request.model].chat(query, history=history)
+    reasoning_content, content = await asyncio.to_thread(Models[request.model].chat, query, history=history)
     choice_data = ChatCompletionResponseChoice(
         index=0,
         message=ChatMessage(role="assistant", content=content, reasoning_content=reasoning_content),

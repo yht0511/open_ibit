@@ -7,10 +7,11 @@ import time
 import threading
 
 class iBit:
-    def __init__(self, username, password):
+    def __init__(self, username, password, timeout_seconds=10):
         self.username = username
         self.password = password
         self.url = "https://ibit.yanhekt.cn"
+        self.timeout_seconds = timeout_seconds
     
     def init(self):
         self.login(self.username, self.password)
@@ -78,7 +79,7 @@ class iBit:
             "prompt_name": prompt_name,
             "knowledge_base_name": knowledge_base_name
         }
-        response = requests.post(url, headers=self.headers, json=data, stream=True)
+        response = requests.post(url, headers=self.headers, json=data, stream=True,timeout=self.timeout_seconds)
         response.raw.decode_content = True
         print("Assistant:",end="",flush=True)
         res = ""
@@ -99,7 +100,8 @@ class iBit:
                                 "reasoning_content": None
                             }
                     print(answer,end="",flush=True)
-                except: pass
+                except:
+                    pass
         self.delete_dialogue(temp_dialogue_id)
 
     def get_history_prompt(self, history):

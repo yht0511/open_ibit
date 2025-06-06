@@ -1,14 +1,16 @@
 import json
+import time
 import requests
 
 class Agent:
-    def __init__(self, appkey, visitor_key):
+    def __init__(self, appkey, visitor_key, timeout_seconds=10):
         self.appkey = appkey
         self.visitor_key = visitor_key
         self.url = f"https://agent.bit.edu.cn/product/llm/chat/{appkey}"
         self.cookies = {
             'app-visitor-key': visitor_key,
         }
+        self.timeout_seconds = timeout_seconds
 
         self.headers = {
             'Accept': 'application/json, text/event-stream',
