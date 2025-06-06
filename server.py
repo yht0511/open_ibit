@@ -149,7 +149,6 @@ async def create_chat_completion(request: ChatCompletionRequest, response: Respo
         return EventSourceResponse(generate, media_type="text/event-stream")
     
     reasoning_content, content = await asyncio.to_thread(Models[request.model]["model"].chat, query, history=history)
-    # print(f"User: {query}\nAssistant: {content.strip()}")
     print("-----------------------Response Content---------------------")
     print(f"Model: {request.model}")
     print(f"Stream: false")
@@ -174,8 +173,8 @@ def predict(query: str, history: List[List[str]], model_id: str):
     content = ""
     reasoning_content = ""
     for chunk in response:
-        content += chunk.get("content", "")
-        reasoning_content += chunk.get("reasoning_content", "")
+        if chunk.get("content", ""): content += chunk.get("content", "")
+        if chunk.get("reasoning_content", ""): reasoning_content += chunk.get("reasoning_content", "")
         choice_data = ChatCompletionResponseStreamChoice(
             index=0,
             delta=DeltaMessage(content=chunk["content"], reasoning_content=chunk["reasoning_content"]),
