@@ -1,9 +1,8 @@
-ddddocr==1.5.6
-fastapi==0.115.10
-pydantic==2.10.6
+bit_login==1.1.0
+fastapi==0.115.12
+openai==1.84.0
+pydantic==2.11.5
 Requests==2.32.3
 sse_starlette==2.2.1
-uvicorn==0.34.0
-beautifulsoup4==4.12.3
-pycryptodome==3.20.0
-bit_login
+transformers==4.41.2
+uvicorn==0.34.3
