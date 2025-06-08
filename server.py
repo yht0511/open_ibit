@@ -235,7 +235,7 @@ def print_statistics():
                 print(f"总在线时间: {time.strftime('%H小时%M分钟%S秒', time.gmtime(time.time() - start_time))}")
                 total_calls = sum(stats.get("calls", 0) for stats in data.values())
                 print(f"总调用数: {total_calls}")
-                print(f"总花费: {sum(stats.get('total_price', 0.0) for stats in data.values()):.4f}¥")
+                print(f"总花费: ¥{sum(stats.get('total_price', 0.0) for stats in data.values()):.4f}")
                 print("模型名称                          调用次数    输入Token     输出Token     Token总量     累计花费")
                 for model, stats in data.items():
                     calls = stats.get("calls", 0)
@@ -243,7 +243,7 @@ def print_statistics():
                     output_tokens = stats.get("output_tokens", 0)
                     total_tokens = input_tokens + output_tokens
                     total_price = stats.get("total_price", 0.0)
-                    print(f"{model:<35} {calls:>8} {input_tokens:>12} {output_tokens:>12} {total_tokens:>12}     {total_price:.4f}¥")
+                    print(f"{model:<35} {calls:>8} {input_tokens:>12} {output_tokens:>12} {total_tokens:>12}     ¥{total_price:.4f}")
                 print("------------------------------------------------------------------------------------")
         except Exception as e:
             print(f"统计信息读取错误: {e}")

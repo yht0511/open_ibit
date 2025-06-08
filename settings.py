@@ -11,7 +11,7 @@ agent_visitor_key = ""
 
 api_key = ""
 
-print_statistics_interval = 60 
+print_statistics_interval = 30 
 
 price_log_file = "./data/statistics.txt"
 price_log_json = "./data/statistics.json"
@@ -34,7 +34,12 @@ if os.environ.get('AGENT_VISITOR_KEY'):
     agent_visitor_key = os.environ.get('AGENT_VISITOR_KEY')
 if os.environ.get('API_KEY'):
     api_key = os.environ.get('API_KEY')
-    
+if os.environ.get('PRINT_STATISTICS_INTERVAL'):
+    try:
+        print_statistics_interval = int(os.environ.get('PRINT_STATISTICS_INTERVAL'))
+    except ValueError:
+        pass
+
 models = {}
 
 if bit_username and bit_password:
