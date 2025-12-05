@@ -1,0 +1,32 @@
+# wrangler.toml - Cloudflare Workers 配置文件
+# 详细文档: https://developers.cloudflare.com/workers/configuration/wrangler/
+
+name = "openai-ibit-api"
+main = "cloudflare-worker.js"
+compatibility_date = "2024-01-01"
+
+# 账户ID (可选,使用 wrangler whoami 获取)
+# account_id = "your-account-id"
+
+# 使用环境变量配置密钥 (通过 wrangler secret put 设置)
+# 必需:
+#   AGENT_APP_KEY - Agent应用密钥
+#   AGENT_VISITOR_KEY - 访客密钥
+# 可选:
+#   API_KEY - API访问密钥
+
+# 路由配置 (如果使用自定义域名)
+# routes = [
+#   { pattern = "api.yourdomain.com/*", zone_name = "yourdomain.com" }
+# ]
+
+# 开发环境配置
+[env.dev]
+name = "openai-ibit-api-dev"
+
+# 生产环境配置
+[env.production]
+name = "openai-ibit-api"
+# routes = [
+#   { pattern = "api.yourdomain.com/*", zone_name = "yourdomain.com" }
+# ]

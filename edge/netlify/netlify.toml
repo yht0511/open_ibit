@@ -1,0 +1,9 @@
+[build]
+  publish = "public"
+
+[[edge_functions]]
+  path = "/*"
+  function = "api"
+
+[dev]
+  port = 8888
