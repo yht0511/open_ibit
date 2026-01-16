@@ -1,4 +1,4 @@
-bit_login==1.1.3
+bit_login==2.0.0
 fastapi==0.115.12
 openai==1.84.0
 pydantic==2.11.5
