@@ -27,9 +27,11 @@ import tokenizer.deepseek.deepseek_tokenizer as deepseek_tokenizer  # DeepSeek �
 bit_username = ""  # 统一身份认证用户名
 bit_password = ""  # 统一身份认证密码
 
-# 智能体广场凭证
-agent_app_key = ""  # 应用密钥（从智能体广场获取）
-agent_visitor_key = ""  # 访客密钥（从智能体广场获取）
+# 智能体广场凭证 (HiAgent)
+# 支持官方 API Key 模式和旧的 AppKey/VisitorKey 模式
+hi_api_key = ""      # 官方 API Key (从发布管理获取)
+agent_app_key = ""   # 应用密钥 (旧模式)
+agent_visitor_key = "" # 访客密钥 (旧模式)
 
 # API 访问密钥（可选，用于保护服务接口）
 api_key = ""
@@ -61,7 +63,10 @@ if os.environ.get('BIT_USERNAME'):
 if os.environ.get('BIT_PASSWORD'):
     bit_password = os.environ.get('BIT_PASSWORD')
 
-# 读取智能体广场凭证
+# 读取智能体广场凭证 (HiAgent)
+# 优先读取官方 API Key
+if os.environ.get('HI_API_KEY'):
+    hi_api_key = os.environ.get('HI_API_KEY')
 if os.environ.get('AGENT_APP_KEY'):
     agent_app_key = os.environ.get('AGENT_APP_KEY')
 if os.environ.get('AGENT_VISITOR_KEY'):
@@ -97,12 +102,12 @@ if bit_username and bit_password:
         "tokenizer": deepseek_tokenizer.count_tokens  # 分词器函数
     }
 
-# 注册智能体广场 DeepSeek-R1 模型
-# 需要提供应用密钥和访客密钥
-if agent_app_key and agent_visitor_key:
+# 注册智能体广场 DeepSeek-R1 模型 (HiAgent)
+if hi_api_key or (agent_app_key and agent_visitor_key):
     models["deepseek-r1"] = {
         "name": "DeepSeek-R1",  # 模型显示名称
         "model": agent.Agent(
+            api_key=hi_api_key,
             appkey=agent_app_key,
             visitor_key=agent_visitor_key
         ),  # 模型实例

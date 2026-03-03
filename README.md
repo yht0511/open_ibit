@@ -5,6 +5,15 @@
 你梨居然上新了满血版的r1 671b模型!可喜可贺~
 正愁找不到免费可靠的api吗?刚好来白嫖学校的!
 
+### 本项目的核心价值
+
+北京理工大学提供的 HiAgent (agent.bit.edu.cn) 和 iBit (ibit.yanhekt.cn) 平台虽然功能强大，但其官方 API 接口采用的是自定义协议（需处理会话创建、UserID 管理、特定 SSE 事件等），无法直接与通用的 OpenAI 客户端（如 NextChat, LobeChat, OpenAI SDK 等）对接。
+
+**本项目的作用：**
+- **协议转换**：将 BIT 自定义 API 转换为标准的 OpenAI Chat Completions API 协议。
+- **无状态化**：自动管理上游会话的创建与销毁，用户只需发送 `messages` 列表。
+- **即插即用**：支持流式输出、思维链（Reasoning）显示，完美适配主流 AI 客户端。
+
 ## 项目架构图
 
 ```
@@ -98,15 +107,18 @@ openai_ibit/
 |-----------|------|--------|------|
 | `BIT_USERNAME` | 是* | `""` | 北理工统一身份认证用户名，用于 iBit 平台登录 |
 | `BIT_PASSWORD` | 是* | `""` | 北理工统一身份认证密码，用于 iBit 平台登录 |
-| `AGENT_APP_KEY` | 是* | `""` | 智能体广场应用密钥，用于 DeepSeek-R1 模型 |
-| `AGENT_VISITOR_KEY` | 是* | `""` | 智能体广场访客密钥，用于 DeepSeek-R1 模型 |
-| `API_KEY` | 否 | `""` | API 访问密钥，设置后客户端需在请求头中携带 `Authorization: Bearer <API_KEY>` |
-| `PRINT_STATISTICS_INTERVAL` | 否 | `30` | 统计信息打印间隔（秒），控制控制台输出调用统计的频率 |
+| `HI_API_KEY` | 是* | `""` | **推荐**：HiAgent 平台官方 API Key（从“发布管理”获取） |
+| `AGENT_APP_KEY` | 否 | `""` | HiAgent 应用密钥（旧模式，不推荐） |
+| `AGENT_VISITOR_KEY` | 否 | `""` | HiAgent 访客密钥（旧模式，不推荐） |
+| `API_KEY` | 否 | `""` | 本服务的 API 访问密钥，设置后客户端需在请求头中携带 |
+| `PRINT_STATISTICS_INTERVAL` | 否 | `30` | 统计信息打印间隔（秒） |
 | `TZ` | 否 | 系统默认 | 时区设置，推荐设置为 `Asia/Shanghai` |
+
+> **官方文档**：有关 HiAgent (agent.bit.edu.cn) 的官方 API 调用方法及说明，请参阅 [HiAgent 开发者中心](https://agent.bit.edu.cn/platform/doc/)。
 
 > **注意**：标记为 `是*` 的环境变量表示至少需要配置一组模型凭证：
 > - **iBit 模型**：需要同时设置 `BIT_USERNAME` 和 `BIT_PASSWORD`
-> - **DeepSeek-R1 模型**：需要同时设置 `AGENT_APP_KEY` 和 `AGENT_VISITOR_KEY`
+> - **DeepSeek-R1 模型**：推荐设置 `HI_API_KEY`；也可使用旧模式 `AGENT_APP_KEY` + `AGENT_VISITOR_KEY`
 > 
 > 如果两组凭证都未配置，程序启动时会报错。
 
@@ -124,7 +136,16 @@ docker run -d -p 8000:8000 --name OpeniBIT \
     yht0511/open_ibit:latest
 ```
 
-#### 2. 仅使用智能体广场 DeepSeek-R1 模型
+#### 2. 仅使用智能体广场 DeepSeek-R1 模型（官方推荐）
+
+```bash
+docker run -d -p 8000:8000 --name OpeniBIT \
+    -e HI_API_KEY=你的HiAgent官方API密钥 \
+    -e TZ=Asia/Shanghai \
+    yht0511/open_ibit:latest
+```
+
+#### 3. 仅使用智能体广场 DeepSeek-R1 模型（旧模式）
 
 ```bash
 docker run -d -p 8000:8000 --name OpeniBIT \
@@ -134,19 +155,18 @@ docker run -d -p 8000:8000 --name OpeniBIT \
     yht0511/open_ibit:latest
 ```
 
-#### 3. 同时使用两个模型
+#### 4. 同时使用两个模型
 
 ```bash
 docker run -d -p 8000:8000 --name OpeniBIT \
     -e BIT_USERNAME=你的统一身份认证用户名 \
     -e BIT_PASSWORD=你的统一身份认证密码 \
-    -e AGENT_APP_KEY=你的应用密钥 \
-    -e AGENT_VISITOR_KEY=你的访客密钥 \
+    -e HI_API_KEY=你的HiAgent官方API密钥 \
     -e TZ=Asia/Shanghai \
     yht0511/open_ibit:latest
 ```
 
-#### 4. 启用 API 密钥保护
+#### 5. 启用 API 密钥保护
 
 ```bash
 docker run -d -p 8000:8000 --name OpeniBIT \
@@ -157,14 +177,13 @@ docker run -d -p 8000:8000 --name OpeniBIT \
     yht0511/open_ibit:latest
 ```
 
-#### 5. 完整配置示例
+#### 6. 完整配置示例
 
 ```bash
 docker run -d -p 8000:8000 --name OpeniBIT \
     -e BIT_USERNAME=你的统一身份认证用户名 \
     -e BIT_PASSWORD=你的统一身份认证密码 \
-    -e AGENT_APP_KEY=你的应用密钥 \
-    -e AGENT_VISITOR_KEY=你的访客密钥 \
+    -e HI_API_KEY=你的HiAgent官方API密钥 \
     -e API_KEY=你想设置的api密钥 \
     -e PRINT_STATISTICS_INTERVAL=60 \
     -e TZ=Asia/Shanghai \
@@ -186,8 +205,9 @@ services:
     environment:
       - BIT_USERNAME=你的统一身份认证用户名
       - BIT_PASSWORD=你的统一身份认证密码
-      - AGENT_APP_KEY=你的应用密钥          # 可选
-      - AGENT_VISITOR_KEY=你的访客密钥      # 可选
+        - HI_API_KEY=你的HiAgent官方API密钥   # 推荐
+        - AGENT_APP_KEY=你的应用密钥          # 旧模式可选
+        - AGENT_VISITOR_KEY=你的访客密钥      # 旧模式可选
       - API_KEY=你想设置的api密钥           # 可选
       - PRINT_STATISTICS_INTERVAL=30        # 可选
       - TZ=Asia/Shanghai
@@ -212,6 +232,7 @@ pip install -r requirements.txt
 ```bash
 export BIT_USERNAME=你的统一身份认证用户名
 export BIT_PASSWORD=你的统一身份认证密码
+export HI_API_KEY=你的HiAgent官方API密钥  # 使用 deepseek-r1 时推荐
 export API_KEY=你想设置的api密钥  # 可选
 ```
 
@@ -233,7 +254,7 @@ python server.py
 | 模型名称 | 说明 | 所需环境变量 |
 |---------|------|-------------|
 | `ibit` | iBit 平台 DeepSeek 模型 | `BIT_USERNAME`, `BIT_PASSWORD` |
-| `deepseek-r1` | 智能体广场 DeepSeek-R1 模型 | `AGENT_APP_KEY`, `AGENT_VISITOR_KEY` |
+| `deepseek-r1` | 智能体广场 DeepSeek-R1 模型 | `HI_API_KEY`（推荐）或 `AGENT_APP_KEY` + `AGENT_VISITOR_KEY`（旧模式） |
 
 ### 客户端对接示例
 
@@ -266,7 +287,91 @@ for chunk in response:
    - **API Key**：你设置的 `API_KEY`（未设置则随意填写）
 3. 选择模型 `ibit` 或 `deepseek-r1`
 
+## 官方 HiAgent Agent API 直连调用（不经过本项目）
+
+如果你希望直接调用 HiAgent 官方 Agent API（不走 OpenAI 协议转换），可按以下方式：
+
+- **Base URL**：`https://agent.bit.edu.cn/api/proxy/api/v1`
+- **鉴权 Header**：`Apikey: 你的_API_KEY`
+- **调用流程**：先 `POST /create_conversation`，再 `POST /chat_query_v2`
+
+### 1）创建会话
+
+```bash
+curl -X POST 'https://agent.bit.edu.cn/api/proxy/api/v1/create_conversation' \
+    -H 'Apikey: 你的_API_KEY' \
+    -H 'Content-Type: application/json' \
+    -d '{"UserID":"test_user_01"}'
+```
+
+从响应中取 `Conversation.AppConversationID`。
+
+### 2）发送查询
+
+```bash
+curl -X POST 'https://agent.bit.edu.cn/api/proxy/api/v1/chat_query_v2' \
+    -H 'Apikey: 你的_API_KEY' \
+    -H 'Content-Type: application/json' \
+    -d '{
+        "UserID":"test_user_01",
+        "AppConversationID":"上一步获取的ID",
+        "Query":"你好，请简述 DeepSeek-R1 的优势。",
+        "ResponseMode":"blocking"
+    }'
+```
+
+`ResponseMode` 可选：
+- `blocking`：阻塞返回完整回答
+- `streaming`：流式返回
+
+### 3）Python 示例
+
+```python
+import requests
+
+BASE_URL = "https://agent.bit.edu.cn/api/proxy/api/v1"
+API_KEY = "你的_API_KEY"
+USER_ID = "test_user_01"
+
+headers = {
+        "Apikey": API_KEY,
+        "Content-Type": "application/json"
+}
+
+# 1. 创建会话
+res_create = requests.post(
+        f"{BASE_URL}/create_conversation",
+        headers=headers,
+        json={"UserID": USER_ID}
+)
+conv_id = res_create.json().get("Conversation", {}).get("AppConversationID")
+
+# 2. 发送查询
+res_query = requests.post(
+        f"{BASE_URL}/chat_query_v2",
+        headers=headers,
+        json={
+                "UserID": USER_ID,
+                "AppConversationID": conv_id,
+                "Query": "你好，请问 HiAgent 平台支持哪些大模型？",
+                "ResponseMode": "blocking"
+        }
+)
+
+print(res_query.json().get("answer"))
+```
+
+更多参考：
+- [HiAgent 开发者中心](https://agent.bit.edu.cn/platform/doc)
+- [HiAgent OpenAPI 通用说明](https://agent.bit.edu.cn/platform/doc/api/hiagent-openapi-general-instructions)
+- [智能体接口详细文档](https://agent.bit.edu.cn/platform/doc/api/agent-api-call/agent-api-documentation)
+
 ## 更新日志
+
+## 2026.3.3更新
+- README 新增“官方 HiAgent Agent API 直连调用”章节，补充 `create_conversation` + `chat_query_v2` 的调用流程。
+- 增加官方 `curl` 与 Python 示例，便于不经过本项目时直接对接 HiAgent。
+- 统一 `deepseek-r1` 的凭证说明：推荐 `HI_API_KEY`，同时保留 `AGENT_APP_KEY` + `AGENT_VISITOR_KEY` 旧模式说明。
 
 ## 2025.6.8更新
 现在支持智能体广场的模型,设置环境变量`AGENT_APP_KEY`和`AGENT_VISITOR_KEY`即可使用。
